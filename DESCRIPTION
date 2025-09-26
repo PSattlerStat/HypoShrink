@@ -1,0 +1,31 @@
+Package: HypoShrink
+Title: Optimize your hypotheses. Keep what matters
+Version: 0.0.0.9000
+Authors@R: 
+    c(person("Paavo", "Sattler", , "paavo.sattler@tu-dortmund.de",
+    role = c("aut", "cre"),
+           comment = (ORCID = "0000-0001-8731-0893")),
+ person("Manuel", "Rosenbaum", role = "ctb"))
+Maintainer: Paavo Sattler <paavo.sattler@tu-dortmund.de>
+Description: A compilation of functions to obtain the so-called companion 
+    hypothesis for a given linear hypothesis. This companion hypothesis leads to 
+    the same value and test decision for commonly used quadratic form-based test 
+    statistics (WTS, MATS, and versions of the ATS), but with a minimal number
+    of rows. This reduces computational effort. The companion hypothesis can be 
+    generated numerically or, for the centering matrix, through an explicit 
+    formula. For more details on the methodology, see
+    Sattler and Rosenbaum (2025) <doi:10.1016/j.spl.2025.110356> and
+    Sattler and Stegherr (2025) <doi:10.48550/arXiv.2310.11799>.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    MASS,
+    bench,
+    fastmatrix
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/PSattlerStat/HypoShrink
+BugReports: https://github.com/PSattlerStat/HypoShrink/issues

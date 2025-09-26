@@ -1,0 +1,5 @@
+^HypoShrink\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+.gitignore
+^\.github
