@@ -43,20 +43,12 @@ CompareHypothesis <- function(H1, H2, y1 = NULL, y2 = NULL) {
   V1 <- t(H1) %*% y1
   V2 <- t(H2) %*% y2
 
-  # Identify the index of the maximum absolute value in M1 for scaling
-  # comparison
-
-  idx <- arrayInd(which.max(abs(M1)), .dim = dim(M1))
-
   # Check for exact equality (matrix and corresponding vector)
   eq1 <- isTRUE(all.equal(M1, M2, check.attributes = FALSE)) &&
     isTRUE(all.equal(V1, V2, check.attributes = FALSE))
 
   # Check for scaled equality
-  scaling_factor <- M2[idx[1], idx[2]] / M1[idx[1], idx[2]]
-  eq2 <- isTRUE(all.equal(M1 * scaling_factor, M2, check.attributes = FALSE)) &&
-    isTRUE(all.equal(V1 * scaling_factor, V2, check.attributes = FALSE))
-  && isTRUE(scaling_factor!=0)
+  eq2 <- qr(rbind(as.vector(M1),as.vector(M2)))$rank
 
   # Determine level of equivalence
   if (eq1 && eq2) {
