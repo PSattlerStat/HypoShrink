@@ -1,0 +1,14 @@
+citHeader("To cite the HypoShrink package in publications use:")
+
+bibentry(
+  "Manual",
+  title = "HypoShrink: Optimize your hypotheses. Keep what matters.",
+  author = c(
+    person("Paavo", "Sattler"),
+    person("Manuel", "Rosenbaum")
+  ),
+  year = "2025",
+  note = "R package version 1.0.0",
+  doi = "10.5281/zenodo.17214498",
+  url = "https://github.com/PSattlerStat/HypoShrink"
+)
