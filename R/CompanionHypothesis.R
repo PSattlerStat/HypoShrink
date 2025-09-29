@@ -1,5 +1,5 @@
 MSrootcompact <- function(X) {
-  # Compute the rank of X using QR decomposition
+  # Compute the rank of a matrix X using QR decomposition
   r <- qr(X)$rank
 
   # Compute the Singular Value Decomposition (SVD): X = U D V^T
@@ -22,11 +22,13 @@ modified_cholesky <- function(A, tol = 1e-10) {
   # Perform LDLᵗ decomposition using fastmatrix::ldl()
   # This gives: A = L %*% D %*% t(L)
   ldl_A = fastmatrix::ldl(A)
-
+  # If the algorithm is numerically not stable, NA is returned.
+if(max(is.na(ldl_A$d)))
+{L=NA}
   # Multiply L (lower triangular) by sqrt(D)
   # This gives a matrix B such that t(B)%*% B ≈ A
   # Then select only the first 'rank(A)' columns to remove near-zero components
-  L = t(ldl_A$lower %*% (diag(sqrt(ldl_A$d))[, 1:qr(A)$rank,drop=FALSE]))
+ else( L = t(ldl_A$lower %*% (diag(sqrt(ldl_A$d))[, 1:qr(A)$rank,drop=FALSE])))
 
   # Return the final matrix L such that A ≈ t(L)%*% L
   return(L)
