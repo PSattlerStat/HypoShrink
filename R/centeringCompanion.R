@@ -1,7 +1,7 @@
 #' Generate Companion for the centering Matrix
 #'
 #' Constructs an `(d-1) × d` matrix that allows to test the usual equality of d
-#' elements, whereto usually the centering matrix `Pd` is used.
+#' elements, whereto commonly the centering matrix `Pd` is used.
 #' The companion has a lower number of rows than the centering matrix, but leads
 #' to the same values of the ATS, MATS or WTS.
 #'
