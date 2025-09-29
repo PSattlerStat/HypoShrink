@@ -38,15 +38,20 @@ modified_cholesky <- function(A, tol = 1e-10) {
 #' This function transforms the given hypothesis into a companion hypothesis.
 #' It checks whether the original matrix `H` has full row rank. If the matrix
 #' does not have full row rank, the function will proceed to generate a
-#' companion matrix.  If a vector `y` is provided, a transformed vector `ytilde`
-#' is calculated as well and returned together with the companion matrix.
+#' companion matrix.If the option `utrapez` is enabled,#' the function attempts
+#'  — where numerically feasible — to produce a companion matrix with upper
+#' trapezoidal structure. This structure is not enforced and the attempt may
+#' fail if it is not numerically stable.  If a vector `y` is provided, a
+#' transformed vector `ytilde` is calculated as well and returned together with
+#' the companion matrix.
 #'
 #' @param H A numeric matrix representing the hypothesis. It should be of size
 #' `m x n`, where `m` is the number of rows.
 #' @param y An optional numeric vector, which only has to be specified if it is
 #' not a zero vector. It will be transformed alongside the matrix.
-#' @param utrapez A binary option, which specifies whether the transformed
-#' matrix L should be a upper trapezoidal matrix.
+#' @param utrapez A binary option which specifies the function should attempt
+#' to compute a companion matrix with upper trapezoidal structure.The default
+#' is `1` (TRUE). Disabling this option may improve computational efficiency.
 #'
 #' @return A list with two components:
 #' \itemize{
@@ -75,7 +80,7 @@ modified_cholesky <- function(A, tol = 1e-10) {
 #' CompanionHypothesis(H, y)
 #'
 #' @export
-CompanionHypothesis <- function(H, y=NULL,utrapez=0) {
+CompanionHypothesis <- function(H, y=NULL,utrapez=1) {
   if (is.null(y)){y = rep(0, dim(H)[1])}
   HypoCheck(H,y)
 
@@ -89,7 +94,8 @@ CompanionHypothesis <- function(H, y=NULL,utrapez=0) {
     # Compute the compact matrix square root of t(H)%*% H, depending on the
     # parameter as upper trapezoidal matrix
     if(utrapez==0){ Laux <- MSrootcompact(t(H) %*% H)}
-    if(utrapez==1){ Laux <- modified_cholesky(t(H) %*% H)}
+    if(utrapez==1){ Laux <- modified_cholesky(t(H) %*% H)
+    if(max(is.na(Laux))){MSrootcompact(t(H) %*% H)}}
 
     # If y is not NULL or a zero vector, also transform the vector
     if ( all(y == 0)) {
