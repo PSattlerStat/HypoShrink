@@ -110,3 +110,17 @@ Benefits include:
 
 - **Manuel Rosenbaum**
   Institute of Statistics, Ulm University
+
+  ## 📚 How to Cite
+
+If you use **HypoShrink** in your research, please cite:
+
+> Sattler, P. & Rosenbaum, M. (2025). *HypoShrink: Optimize your hypotheses. Keep what matters.* R package version 1.0.0.  
+> DOI: [10.5281/zenodo.17214498](https://doi.org/10.5281/zenodo.17214498)  
+> URL: [https://github.com/PSattlerStat/HypoShrink](https://github.com/PSattlerStat/HypoShrink)
+
+You can also get the citation directly in R:
+
+```r
+citation("HypoShrink")
+
