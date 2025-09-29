@@ -40,10 +40,9 @@ if(max(is.na(ldl_A$d)))
 #' This function transforms the given hypothesis into a companion hypothesis.
 #' It checks whether the original matrix `H` has full row rank. If the matrix
 #' does not have full row rank, the function will proceed to generate a
-#' companion matrix.If the option `utrapez` is enabled,#' the function attempts
+#' companion matrix. If the option `utrapez` is enabled, the function attempts
 #'  — where numerically feasible — to produce a companion matrix with upper
-#' trapezoidal structure. This structure is not enforced and the attempt may
-#' fail if it is not numerically stable.  If a vector `y` is provided, a
+#' trapezoidal structure. If a vector `y` is provided, a
 #' transformed vector `ytilde` is calculated as well and returned together with
 #' the companion matrix.
 #'
