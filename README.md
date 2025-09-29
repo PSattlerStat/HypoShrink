@@ -41,7 +41,7 @@ devtools::install_github("PSattlerStat/HypoShrink")
 | Function                   | Description                                                                                           |
 |---------------------------|-------------------------------------------------------------------------------------------------------|
 | `CenteringCompanion(d)`   | Returns the centering companion matrix \( P_d \in \mathbb{R}^{d \times d} \), in upper trapezoidal form. |
-| `CompanionHypothesis(H, c, utrapez = FALSE)` | Transforms a hypothesis \((H, c)\) into an equivalent companion hypothesis. Optionally returns an upper trapezoidal matrix. |
+| `CompanionHypothesis(H, c, utrapez = TRUE)` | Transforms a hypothesis \((H, c)\) into an equivalent companion hypothesis. Returns an upper trapezoidal matrix if numerically possible. |
 | `CompareHypotheses(H1, c1, H2, c2)` | Checks whether two hypotheses lead to the same test result under various ATS types. |
 | `HypothesisPotential(H, c)` | Estimates the relative computational savings when using a companion matrix instead of the original hypothesis. |
 
