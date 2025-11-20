@@ -1,0 +1,86 @@
+---
+title: "The R package HypoShrink: Optimize Your Hypotheses. Keep What Matters."
+tags:
+  - R
+  - statistics
+  - linear models
+  - hypothesis testing
+  - approximate test statistic
+  - companion matrix
+authors:
+  - name: Paavo Sattler
+    orcid: 0000-0001-8731-0893
+    affiliation: [1, 2]
+  - name: Manuel Rosenbaum
+    orcid: 0009-0008-6793-869X
+    affiliation: 3
+affiliations:
+  - index: 1
+    name: Department of Statistics, TU Dortmund University, Germany
+  - index: 2
+    name: Institute of Statistics, RWTH Aachen University, Aachen, Germany
+  - index: 3
+    name: Institute of Statistics, Ulm University, Helmholtzstrasse 20, 89081 Ulm, Germany
+date: 2025-10-10
+bibliography: paper.bib
+---
+
+# Summary
+
+**HypoShrink** is an R package for optimizing and comparing linear hypotheses in the context of quadratic forms, especially the ANOVA-type-statistics (ATS). Built on the theoretical foundation by Sattler & Rosenbaum (2025) [@sattler2025], the package provides practical tools to construct *companion hypothesis matrices*, identify redundant hypothesis specifications, and assess equivalence under ATS, while reducing the number of rows and thereby the computational effort.
+
+In classical hypothesis testing with ATS, different hypothesis matrices may encode the same null hypothesis but yield different test statistic values and, consequently, different test results. However, *companion* hypothesis matrices always yield identical test statistics and decisions. Their computational efficiency, rank, or numerical stability can nevertheless vary substantially. **HypoShrink** addresses this by providing:
+
+- Explicit companion matrix generation for the centering matrix,
+- Hypothesis transformation into companion form,
+- Equivalence checking under various ATS types,
+- Quantification of computational savings via dimension reduction.
+
+**HypoShrink** is designed for applied statisticians, data analysts, and researchers working with multivariate models where hypothesis specification needs to be both rigorous and efficient. This is especially relevant for resampling methods, permutation tests, and high-dimensional settings.
+
+# Statement of Need
+
+Linear hypotheses in multivariate statistics (e.g., in MANOVA or GLM frameworks) are often specified via a matrix-vector pair \((H, c)\), where the hypothesis matrix \(H\) represents linear combinations of parameters and \(c\) is a corresponding vector. These specifications are not unique — multiple different \((H, c)\) pairs may encode the same null hypothesis. The choice of matrix can influence the value of the test statistic, as well as numerical properties, computational cost, and interpretability.
+
+In their 2025 publication, Sattler & Rosenbaum [@sattler2025] introduce a systematic way to reduce such hypotheses via *companion matrices* that preserve statistical equivalence under ATS. This continues and complements earlier work by Sattler & Zimmermann [@sattler2024] on the Wald-type-statistic (WTS). Despite the theoretical importance of these results, no software package in R or other environments made these tools directly accessible to users — until now.
+
+**HypoShrink** fills this gap by enabling:
+
+- Creation of companion matrices that are equivalent under ATS,
+- Simplification of hypothesis specifications without altering test outcomes,
+- Assessment of efficiency potential,
+- Analytical comparison of different hypothesis formulations.
+
+This contributes to reproducibility, numerical robustness, and interpretability in applied statistical modelling.
+
+# Features
+
+| Function                | Purpose                                                                 |
+|------------------------|-------------------------------------------------------------------------|
+| `CenteringCompanion(d)`| Returns the companion for standard centering matrix of dimension \(d\).  |
+| `CompanionHypothesis()`| Transforms a given hypothesis \((H, c)\) into an equivalent companion.   |
+| `CompareHypotheses()`  | Compares two hypotheses for equivalence under four ATS quadratic forms. |
+| `HypothesisPotential()`| Computes relative savings in complexity/dimension from companion usage. |
+
+# Usage Examples
+
+```r
+library(HypoShrink)
+
+# 1. Companion matrix of size 4
+P <- CenteringCompanion(d = 4)
+
+# 2. Transform hypothesis to companion form
+H <- matrix(c(1, -1, 0, 0, 0,
+              0, 1, -1, 0, 0), byrow = TRUE, nrow = 2)
+c <- c(0, 0)
+comp <- CompanionHypothesis(H, c, utrapez = TRUE)
+
+# 3. Compare two hypotheses under ATS
+H2 <- matrix(c(1, 0, -1, 0, 0,
+               0, 1, 0, -1, 0), byrow = TRUE, nrow = 2)
+c2 <- c(0, 0)
+CompareHypotheses(H, c, H2, c2)
+
+# 4. Assess potential computational gain
+HypothesisPotential(H, c)
