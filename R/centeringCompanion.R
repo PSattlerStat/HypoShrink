@@ -18,7 +18,7 @@
 #' @export
 centeringCompanion <- function(d) {
   # Check input validity
-  if (!is.numeric(d) || length(d) != 1 || d < 2 || floor(d) != d||!is.na(d)) {
+  if (!is.numeric(d) || length(d) != 1 || d < 2 || floor(d) != d||is.na(d)) {
     stop("Input 'd' must be a single integer greater than 1.")
   }
 
