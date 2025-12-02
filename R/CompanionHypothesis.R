@@ -96,7 +96,7 @@ CompanionHypothesis <- function(H, y=NULL,utrapez=1) {
     # parameter as upper trapezoidal matrix
     if(utrapez==0){ Laux <- MSrootcompact(t(H) %*% H)}
     if(utrapez==1){ Laux <- modified_cholesky(t(H) %*% H)
-    if(max(is.na(Laux))){MSrootcompact(t(H) %*% H)}}
+    if(max(is.na(Laux))){Laux <- MSrootcompact(t(H) %*% H)}}
 
     # If y is not NULL or a zero vector, also transform the vector
     if ( all(y == 0)) {
