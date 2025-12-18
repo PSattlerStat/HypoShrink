@@ -27,6 +27,8 @@ affiliations:
 - index: 3
   name: Institute of Statistics, Ulm University, Helmholtzstrasse 20, 89081 Ulm, Germany
 output: rticles::joss_article
+keep_tex: true
+latex_engine: pdflatex
 
 journal: JOSS
 ---
@@ -81,9 +83,43 @@ the hypothesis matrix $\mathbf{H}$ represents linear combinations of parameters
 and $\mathbf{c}$ is a corresponding vector. This involves the full spectrum of multivariate parameters, ranging from high-dimensional mean vectors [@sattler2021] and vectorized correlation matrices [@sattler2023] to relative effects [@thiel2025], 
 to name just a few. However, these specifications are not unique — multiple different $(\mathbf{H}, \mathbf{c})$ pairs may encode the same null hypothesis.
 The choice of matrix can influence the value of the test statistic and hence the final test decision, as well as numerical properties, computational cost, and interpretability. 
-Notably, the vast majority of hypothesis matrices do not have full rank, the most prominent example may be the centering matrix, which is widely used.
-This constitutes considerable potential, since for such hypothesis matrices, the number of rows can be significantly reduced, economizing the computational burden substantially.
-For the centering matrix it even comes at no cost, as the reduction of rows is readily calculated and implemented, thereby facilitating valuable savings considering its widespread application.
+Notably, the vast majority of hypothesis matrices do not have full rank, the most prominent example may be the centering matrix, which is widely used. For instance, comparing two $d$-dimensional vectors typically employs the centering matrix for two groups and its companion,
+
+\[
+P_2 = \frac12 \begin{pmatrix}1 & -1 \\ -1 & 1 \end{pmatrix}, \qquad
+L = \left(\frac{1}{\sqrt{2}}, -\frac{1}{\sqrt{2}}\right)
+\]
+
+which, when combined with the $d$-dimensional identity, produce Kronecker products
+
+\[
+P_2 \otimes I_d =
+\frac12
+\begin{pmatrix}
+ I_d & -I_d\\
+ -I_d & I_d
+\end{pmatrix}, \qquad
+L \otimes I_d =
+\frac{1}{\sqrt{2}}
+\begin{pmatrix}
+I_d & -I_d 
+\end{pmatrix}
+\]
+For this centering matrix it even comes at no cost, as the reduction of rows is readily calculated and implemented, thereby facilitating valuable savings considering its widespread application. 
+These tangible runtime savings for 4 usual common forms are illustrated exemplary in Figure 1 for $d=5$ and $d=10$.
+
+Measured runtime savings are subject to minor variability across systems and runs;
+this was accounted by \texttt{duration = 2000} and therefore averaging runtimes for a
+high number of iterations in \texttt{HypothesisPotential} and thus reducing the variability.
+
+
+![Relative runtime savings achieved by replacing the centering hypothesis
+$P_2 \otimes I_d$ with its companion form for two representative dimensions
+$d = 5$ and $d = 10$, each averaged over a large time of runs (duration = 2000). 
+Results are shown for three ANOVA-type statistics (ATS, ATS$_s$, ATS$_f$)
+and the Wald-type statistic (WTS); see [@sattler2025] for formal definitions of the underlying quadratic forms.
+Runtime savings were computed using the \texttt{HypothesisPotential} function.](Rplot.png){ width=70% }
+
 
 In general, **HypoShrink** aims to realize this potential by elaborating the systematic procedure, introduced in (Sattler and Rosenbaum 2025) for the reduction of such hypotheses via companion matrices that preserve statistical equivalence under ATS. This work builds on and complements earlier research by Sattler & Zimmermann [@sattler2024] on the Wald-type-statistic (WTS). Despite the theoretical and practical importance of these results, no software package in R or other environments offered direct access to these tools yet.
 
@@ -118,19 +154,22 @@ library(HypoShrink)
 #    the original ATS value.
 P <- CenteringCompanion(d = 4)
 
-# 2. Transform a linear hypothesis of the form Hx = c into its companion form.
+# 2. Transform a linear hypothesis of the form Hx = c into its companion 
+#    form.
 H <- matrix(c(1, -1, 0, 0,
               0,  0, 1, -1), byrow = TRUE, nrow = 2)
 c <- c(0, 0)
 comp <- CompanionHypothesis(H, c)
 
-# 3. Investigate whether the ATS values differ between two hypothesis matrices.
+# 3. Investigate whether the ATS values differ between two hypothesis 
+#    matrices.
 H2 <- matrix(c(1,  0, -1, 0,
                0,  1,  0, -1), byrow = TRUE, nrow = 2)
 c2 <- c(0, 0)
 CompareHypotheses(H, c, H2, c2)
 
-# 4. Assess the potential computational gain achieved by using the companion form.
+# 4. Assess the potential computational gain achieved by using the 
+#    companion form.
 HypothesisPotential(H, c)
 
 
