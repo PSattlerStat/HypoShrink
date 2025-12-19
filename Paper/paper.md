@@ -12,19 +12,19 @@ authors:
 - name: Paavo Sattler
   orcid: "0000-0001-8731-0893"
   affiliation:
-  - 1
-  - 2
+  - "1"
+  - "2"
 - name: Manuel Rosenbaum
   orcid: "0009-0008-6793-869X"
-  affiliation: 3
+  affiliation: "3"
 bibliography: paper.bib
 citation_author: Sattler and Rosenbaum
 affiliations:
-- index: 1
+- index:  "1"
   name: Department of Statistics, TU Dortmund University, Germany
-- index: 2 
+- index:  "2" 
   name: Institute of Statistics, RWTH Aachen University, Aachen, Germany
-- index: 3
+- index:  "3"
   name: Institute of Statistics, Ulm University, Helmholtzstrasse 20, 89081 Ulm, Germany
 output: rticles::joss_article
 keep_tex: true
