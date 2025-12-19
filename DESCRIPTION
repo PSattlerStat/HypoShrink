@@ -1,30 +1,36 @@
 Package: HypoShrink
-Title: Optimize your hypotheses. Keep what matters
+Type: Package
+Title: Companion Hypothesis Matrices for ANOVA-Type Statistics
 Version: 0.0.0.9000
-Authors@R: 
-    c(person("Paavo", "Sattler", , "paavo.sattler@tu-dortmund.de",
-    role = c("aut", "cre"),
-           comment = (ORCID = "0000-0001-8731-0893")),
- person("Manuel", "Rosenbaum", role = "ctb"))
+Authors@R: c(
+    person("Paavo", "Sattler",
+           email = "paavo.sattler@tu-dortmund.de",
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0001-8731-0893")),
+    person("Manuel", "Rosenbaum",
+           role = "ctb")
+)
 Maintainer: Paavo Sattler <paavo.sattler@tu-dortmund.de>
-Description: A compilation of functions to obtain the so-called companion 
-    hypothesis for a given linear hypothesis. This companion hypothesis leads to 
-    the same value and test decision for commonly used quadratic form-based test 
-    statistics (WTS, MATS, and versions of the ATS), but with a minimal number
-    of rows. This reduces computational effort. The companion hypothesis can be 
-    generated numerically or, for the centering matrix, through an explicit 
-    formula. For more details on the methodology, see
+Description: A collection of functions to compute so-called companion
+    hypotheses for given linear hypotheses. Companion hypotheses yield the
+    same test statistic values and test decisions for commonly used
+    quadratic-form-based procedures, including the Wald-type statistic
+    (WTS), the modified ANOVA-type statistic (MATS), and variants of the
+    ANOVA-type statistic (ATS), while using a minimal number of rows. This
+    reduction can substantially decrease computational effort. Companion
+    hypotheses can be obtained numerically or, in the case of the centering
+    matrix, via an explicit formula. For methodological details, see
     Sattler and Rosenbaum (2025) <doi:10.1016/j.spl.2025.110356> and
     Sattler and Stegherr (2025) <doi:10.48550/arXiv.2310.11799>.
-License: GPL (>= 3)
+License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Imports: 
+Imports:
     MASS,
     bench,
     fastmatrix
-Suggests: 
+Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: https://github.com/PSattlerStat/HypoShrink
