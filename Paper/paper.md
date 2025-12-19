@@ -79,26 +79,36 @@ to name just a few. However, these specifications are not unique — multiple di
 The choice of matrix can influence the value of the test statistic and hence the final test decision, as well as numerical properties, computational cost, and interpretability. 
 Notably, the vast majority of hypothesis matrices do not have full rank, the most prominent example may be the centering matrix, which is widely used. For instance, comparing two $d$-dimensional vectors typically employs the centering matrix for two groups and its companion,
 
-\[
-P_2 = \frac12 \begin{pmatrix}1 & -1 \\ -1 & 1 \end{pmatrix}, \qquad
-L = \left(\frac{1}{\sqrt{2}}, -\frac{1}{\sqrt{2}}\right)
-\]
+$$
+P_2 = \frac{1}{2}
+\begin{pmatrix}
+1 & -1 \\
+-1 & 1
+\end{pmatrix},
+\qquad
+L =
+\begin{pmatrix}
+\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}}
+\end{pmatrix}
+$$
 
 which, when combined with the $d$-dimensional identity, produce Kronecker products
 
-\[
+$$
 P_2 \otimes I_d =
-\frac12
+\frac{1}{2}
 \begin{pmatrix}
- I_d & -I_d\\
- -I_d & I_d
-\end{pmatrix}, \qquad
+I_d & -I_d \\
+-I_d & I_d
+\end{pmatrix},
+\qquad
 L \otimes I_d =
 \frac{1}{\sqrt{2}}
 \begin{pmatrix}
-I_d & -I_d 
-\end{pmatrix}
-\]
+I_d & -I_d
+\end{pmatrix}.
+$$
+
 For this centering matrix it even comes at no cost, as the reduction of rows is readily calculated and implemented, thereby facilitating valuable savings considering its widespread application. 
 These tangible runtime savings for 4 usual common forms are illustrated exemplary in Figure 1 for $d=5$ and $d=10$.
 
