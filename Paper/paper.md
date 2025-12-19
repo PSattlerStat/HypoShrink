@@ -11,13 +11,10 @@ date: \today
 authors:
 - name: Paavo Sattler
   orcid: "0000-0001-8731-0893"
-  affiliation:
-  - "1"
-  - "2"
+  affiliation: "1,2"
 - name: Manuel Rosenbaum
   orcid: "0009-0008-6793-869X"
-  affiliation:
-  - "3"
+  affiliation: "3"
 bibliography: paper.bib
 citation_author: Sattler and Rosenbaum
 affiliations:
@@ -31,6 +28,7 @@ output: rticles::joss_article
 keep_tex: true
 latex_engine: pdflatex
 ---
+
 
 
 journal: JOSS
