@@ -1,8 +1,39 @@
 ---
-output:
-  pdf_document: default
-  html_document: default
+title: 'The R package HypoShrink: Optimize Your Hypotheses. Keep What Matters.'
+tags:
+- R
+- statistics
+- linear models
+- hypothesis testing
+- approximate test statistic
+- companion matrix
+date: \today
+authors:
+- name: Paavo Sattler
+  orcid: "0000-0001-8731-0893"
+  affiliation:
+  - "1"
+  - "2"
+- name: Manuel Rosenbaum
+  orcid: "0009-0008-6793-869X"
+  affiliation:
+  - "3"
+bibliography: paper.bib
+citation_author: Sattler and Rosenbaum
+affiliations:
+- index: "1"
+  name: Department of Statistics, TU Dortmund University, Germany
+- index: "2"
+  name: Institute of Statistics, RWTH Aachen University, Aachen, Germany
+- index: "3"
+  name: Institute of Statistics, Ulm University, Helmholtzstrasse 20, 89081 Ulm, Germany
+output: rticles::joss_article
+keep_tex: true
+latex_engine: pdflatex
+journal: JOSS
 ---
+
+# Summary
 # HypoShrink
 
 **HypoShrink** is an R package for optimizing and comparing linear hypotheses in multivariate statistics using *companion matrices* under ANOVA-type statistics (ATS). It simplifies hypothesis specifications, preserves statistical equivalence, and can reduce computational cost.
@@ -50,3 +81,4 @@ The software itself is licensed under **MIT License** and maintained in [PSattle
 
 - GitHub repository: [https://github.com/PSattlerStat/HypoShrink](https://github.com/PSattlerStat/HypoShrink)  
 - Manuscript for JOSS submission: `paper/paper.md`
+
