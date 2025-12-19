@@ -3,7 +3,7 @@
 **Optimize your hypotheses. Keep what matters.**
 An R package for simplifying and comparing linear hypotheses while preserving statistical test results.
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI (Sattler & Rosenbaum, 2025)](https://img.shields.io/badge/DOI-10.1016%2Fj.spl.2025.110356-blue)](https://doi.org/10.1016/j.spl.2025.110356)
 [![arXiv](https://img.shields.io/badge/arXiv-2310.11799-b31b1b.svg)](https://arxiv.org/abs/2310.11799)
 
