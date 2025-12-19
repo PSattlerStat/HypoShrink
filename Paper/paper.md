@@ -27,12 +27,6 @@ affiliations:
 - index: "3"
   name: Institute of Statistics, Ulm University, Helmholtzstrasse 20, 89081 Ulm, Germany
 output: rticles::joss_article
-
-journal: JOSS
----
-
-
-
 journal: JOSS
 ---
 
