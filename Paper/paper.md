@@ -16,7 +16,7 @@ authors:
   - "2"
 - name: Manuel Rosenbaum
   orcid: "0009-0008-6793-869X"
-  affiliation: 3
+  affiliation: "3"
 bibliography: paper.bib
 citation_author: Sattler and Rosenbaum
 affiliations:
