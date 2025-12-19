@@ -11,7 +11,7 @@ date: \today
 authors:
 - name: Paavo Sattler
   orcid: "0000-0001-8731-0893"
-  affiliation:affiliation: "1,2"
+  affiliation: "1,2"
 - name: Manuel Rosenbaum
   orcid: "0009-0008-6793-869X"
   affiliation: "3"
