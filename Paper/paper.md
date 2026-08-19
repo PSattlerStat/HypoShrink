@@ -142,10 +142,10 @@ optimize running times.
 
 | Function | Purpose |
 |-------------------|-----------------------------------------------------|
-| `CenteringCompanion(d)` | Returns the companion for standard centering matrix of dimension $d$. |
+| `centeringCompanion(d)` | Returns the companion for standard centering matrix of dimension $d$. |
 | `CompanionHypothesis()` | Transforms a given hypothesis $(H, c)$ into an equivalent companion. |
-| `CompareHypotheses()` | Compares two hypotheses for equivalence under four ATS quadratic forms. |
-| `HypothesisPotential()` | Computes relative savings in complexity/dimension from companion usage. |
+| `CompareHypothesis()` | Checks equivalence conditions for the classical ATS and standardized ATS variants. |
+| `HypothesisPotential()` | Benchmarks relative computation-time savings from companion usage. |
 
 # Usage Examples
 
@@ -156,25 +156,26 @@ library(HypoShrink)
 #    Companion matrices allow testing the same hypothesis with a
 #    minimal number of rows in the hypothesis matrix while preserving
 #    the original ATS value.
-P <- CenteringCompanion(d = 4)
+P <- centeringCompanion(d = 4)
 
 # 2. Transform a linear hypothesis of the form Hx = c into its companion 
 #    form.
-H <- matrix(c(1, -1, 0, 0,
-              0,  0, 1, -1), byrow = TRUE, nrow = 2)
-c <- c(0, 0)
-comp <- CompanionHypothesis(H, c)
+H <- matrix(c(1, -1,  0,  0,
+              0,  0,  1, -1,
+              1, -1, -1,  1), byrow = TRUE, nrow = 3)
+c <- c(0, 0, 0)
+comp <- CompanionHypothesis(H, c, trapez = "lower")
 
 # 3. Investigate whether the ATS values differ between two hypothesis 
 #    matrices.
 H2 <- matrix(c(1,  0, -1, 0,
                0,  1,  0, -1), byrow = TRUE, nrow = 2)
 c2 <- c(0, 0)
-CompareHypotheses(H, c, H2, c2)
+CompareHypothesis(H, H2, c, c2)
 
 # 4. Assess the potential computational gain achieved by using the 
 #    companion form.
-HypothesisPotential(H, c)
+HypothesisPotential(H)
 ```
 
 # Acknowledgements
