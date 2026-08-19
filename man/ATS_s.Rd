@@ -19,7 +19,7 @@ A numeric value representing the scaled ATS statistic.
 \description{
 This function computes the standardized ATS (ATS_s) value for a given
 hypothesis matrix \code{H} and a data vector \code{X}, optionally using a covariance
-matrix \code{Sigma}. The ATS_s is the ATS statistic scaled by the trace#' of the
+matrix \code{Sigma}. The ATS_s is the ATS statistic scaled by the trace of the
 matrix \code{H\%*\%Sigma\%*\%t(H)}.
 }
 \examples{
