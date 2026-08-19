@@ -1,68 +1,96 @@
-#' Compare Two Hypothesis Representations in Linear Models
+.scaled_equal <- function(x1, x2, tol = sqrt(.Machine$double.eps)) {
+  scale2 <- max(abs(x2))
+
+  if (scale2 == 0) {
+    return(FALSE)
+  }
+
+  index <- which.max(abs(x2))
+  a <- x1[index] / x2[index]
+
+  if (!is.finite(a) || a <= 0) {
+    return(FALSE)
+  }
+
+  error <- max(abs(x1 - a * x2))
+  scale <- max(1, max(abs(x1)), abs(a) * scale2)
+
+  error <= tol * scale
+}
+
+#' Compare Two Hypothesis Representations
 #'
-#' This function compares two hypothesis representations (i.e., hypothesis
-#' matrices and corresponding vectors). It checks whether the classical and
-#' standardized ATS (ANOVA-Type-Statistic) versions agree between the two
-#' representations.
+#' Compares two matrix-vector representations of linear hypotheses and checks
+#' whether the corresponding classical ATS and standardized ATS versions agree
+#' for every argument.
 #'
 #' @param H1 A numeric matrix representing the first hypothesis matrix.
 #' @param H2 A numeric matrix representing the second hypothesis matrix.
-#' @param y1 An optional numeric vector representing the right-hand side for the
-#'  first hypothesis. Defaults to a zero vector.
-#' @param y2 An optional numeric vector representing the right-hand side for the
-#'  second hypothesis. Defaults to a zero vector.
+#' @param y1 An optional numeric vector for the first hypothesis. Defaults to a
+#'   zero vector.
+#' @param y2 An optional numeric vector for the second hypothesis. Defaults to a
+#'   zero vector.
 #'
-#' @return A character string indicating the level of agreement between the two
-#' representations:
+#' @return A character string indicating the level of agreement:
 #' \itemize{
-#'   \item `"all_equal"`: All ATS versions (classical and standardized) agree.
-#'   \item `"standardized_equal"`: Only the standardized ATS versions agree; the
-#'    classical version differs.
-#'   \item `"none_equal"`: No ATS versions agree between the representations.
+#'   \item `"all_equal"`: The classical and standardized ATS versions agree.
+#'   \item `"standardized_equal"`: The standardized ATS versions agree, but
+#'     the classical ATS may differ by a positive scale factor.
+#'   \item `"none_equal"`: The required equivalence conditions are not met.
 #' }
-#' A message is also printed to inform the user.
+#'
+#' @details
+#' For the classical ATS, equality for every argument requires equality of
+#' `t(H) %*% H`, `t(H) %*% y`, and `sum(y^2)`. For standardized ATS versions,
+#' the same three quantities may differ by one common positive scale factor.
 #'
 #' @examples
 #' H <- matrix(c(1, 0, 0, 1), nrow = 2)
-#' CompareHypothesis(H, H)  # Should return "all_equal"
+#' CompareHypothesis(H, H)
 #'
 #' @export
 CompareHypothesis <- function(H1, H2, y1 = NULL, y2 = NULL) {
-  # Default right-hand sides: zero vectors
-  if (is.null(y1)) y1 <- rep(0, times = nrow(H1))
-  if (is.null(y2)) y2 <- rep(0, times = nrow(H2))
+  if (is.null(y1)) {
+    y1 <- rep(0, nrow(H1))
+  }
+  if (is.null(y2)) {
+    y2 <- rep(0, nrow(H2))
+  }
 
-  # Check input validity using auxilary function HypoCheck
   HypoCheck(H1, y1)
   HypoCheck(H2, y2)
 
-  # Matrix products for comparison
-  M1 <- t(H1) %*% H1
-  M2 <- t(H2) %*% H2
-
-  V1 <- t(H1) %*% y1
-  V2 <- t(H2) %*% y2
-
-  # Check for exact equality (matrix and corresponding vector)
-  eq1 <- isTRUE(all.equal(M1, M2, check.attributes = FALSE)) &&
-    isTRUE(all.equal(V1, V2, check.attributes = FALSE))
-
-  # Check for scaled equality
-  eq2 <- qr(rbind(as.vector(M1),as.vector(M2)))$rank
-
-  # Determine level of equivalence
-  if (eq1 && eq2) {
-    message("\033[32m For these hypothesis representations all considered
-            ATS-versions coincide. \n\033[0m")
-    return("all_equal")
-  } else if (eq2 && !eq1) {
-    message("\033[32m For these hypothesis representations the classical ATS can
-            differ,\n whereas all considered standardized ATS-versions coincide.
-            \n\033[0m")
-    return("standardized_equal")
-  } else {
-    message("\033[31m For these hypothesis representations no considered
-            ATS-version coincides.\n\033[0m")
-    return("none_equal")
+  if (ncol(H1) != ncol(H2)) {
+    stop("The two hypothesis matrices must have the same number of columns.")
   }
+
+  if (qr(cbind(H1, y1))$rank > qr(H1)$rank ||
+      qr(cbind(H2, y2))$rank > qr(H2)$rank) {
+    stop("Both hypotheses must have non-empty solution sets.")
+  }
+
+  M1 <- crossprod(H1)
+  M2 <- crossprod(H2)
+  V1 <- drop(crossprod(H1, y1))
+  V2 <- drop(crossprod(H2, y2))
+  n1 <- sum(y1^2)
+  n2 <- sum(y2^2)
+
+  exact_equal <-
+    isTRUE(all.equal(M1, M2, check.attributes = FALSE)) &&
+    isTRUE(all.equal(V1, V2, check.attributes = FALSE)) &&
+    isTRUE(all.equal(n1, n2, check.attributes = FALSE))
+
+  if (exact_equal) {
+    return("all_equal")
+  }
+
+  quantities1 <- c(as.vector(M1), V1, n1)
+  quantities2 <- c(as.vector(M2), V2, n2)
+
+  if (.scaled_equal(quantities1, quantities2)) {
+    return("standardized_equal")
+  }
+
+  "none_equal"
 }

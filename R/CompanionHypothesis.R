@@ -1,120 +1,227 @@
-MSrootcompact <- function(X) {
-  # Compute the rank of a matrix X using QR decomposition
-  r <- qr(X)$rank
+.compact_companion <- function(H, y, r) {
+  d <- ncol(H)
 
-  # Compute the Singular Value Decomposition (SVD): X = U D V^T
-  SVD <- svd(X)
-
-  # Use only the top-r components of the SVD
-  # Construct sqrt(D_r) with the largest r singular values
-  # Return sqrt(D_r) * U^T (a compact square root representation)
-  MSroot <- sqrt(diag(SVD$d[1:r,drop=FALSE],r,r)) %*% t(SVD$u[,1:r,drop=TRUE])
-
-  return(MSroot)
-}
-
-modified_cholesky <- function(A, tol = 1e-10) {
-  # Check whether A is symmetric
-  if (!isSymmetric(A)) {
-    stop("Matrix A is not symmetric.")
+  if (r == 0L) {
+    return(list(
+      L = matrix(numeric(0), nrow = 0L, ncol = d),
+      ytilde = numeric(0)
+    ))
   }
 
-  # Perform LDLᵗ decomposition using fastmatrix::ldl()
-  # This gives: A = L %*% D %*% t(L)
-  ldl_A = fastmatrix::ldl(A)
-  # If the algorithm is numerically not stable, NA is returned.
-if(max(is.na(ldl_A$d)))
-{L=NA}
-  # Multiply L (lower triangular) by sqrt(D)
-  # This gives a matrix B such that t(B)%*% B ≈ A
-  # Then select only the first 'rank(A)' columns to remove near-zero components
- else( L = t(ldl_A$lower %*% (diag(sqrt(ldl_A$d))[, 1:qr(A)$rank,drop=FALSE])))
+  # Compute the compact SVD directly from H. This avoids forming H^T H,
+  # whose condition number is the square of the condition number of H.
+  sv <- svd(H, nu = r, nv = r)
 
-  # Return the final matrix L such that A ≈ t(L)%*% L
-  return(L)
+  U <- sv$u[, seq_len(r), drop = FALSE]
+  V <- sv$v[, seq_len(r), drop = FALSE]
+  singular_values <- sv$d[seq_len(r)]
+
+  # L = D_r V_r^T satisfies L^T L = H^T H and has exactly r rows.
+  L <- sweep(t(V), 1L, singular_values, `*`)
+
+  # If H theta = y is non-empty, y belongs to col(H). Hence
+  # ytilde = U_r^T y satisfies L^T ytilde = H^T y and ||ytilde|| = ||y||.
+  ytilde <- drop(crossprod(U, y))
+
+  list(L = L, ytilde = ytilde)
 }
 
+.safe_hypot <- function(x, y) {
+  scale <- max(abs(x), abs(y))
+
+  if (scale == 0) {
+    return(0)
+  }
+
+  scale * sqrt((x / scale)^2 + (y / scale)^2)
+}
+
+.make_lower_trapezoidal <- function(L, ytilde) {
+  r <- nrow(L)
+  d <- ncol(L)
+
+  if (r <= 1L) {
+    return(list(L = L, ytilde = ytilde))
+  }
+
+  k <- d - r
+
+  # The lower-trapezoidal condition with bandwidth k = d-r is equivalent
+  # to a lower triangular rightmost r x r block. Orthogonal Givens row
+  # rotations create the required zeros while preserving L^T L.
+  for (q in seq.int(r, 2L, by = -1L)) {
+    j <- k + q
+    pivot <- q
+
+    for (i in seq_len(q - 1L)) {
+      x <- L[i, j]
+      y <- L[pivot, j]
+
+      if (x == 0) {
+        next
+      }
+
+      rho <- .safe_hypot(x, y)
+      cc <- y / rho
+      ss <- -x / rho
+
+      row_i <- L[i, ]
+      row_pivot <- L[pivot, ]
+
+      L[i, ] <- cc * row_i + ss * row_pivot
+      L[pivot, ] <- -ss * row_i + cc * row_pivot
+
+      y_i <- ytilde[i]
+      y_pivot <- ytilde[pivot]
+      ytilde[i] <- cc * y_i + ss * y_pivot
+      ytilde[pivot] <- -ss * y_i + cc * y_pivot
+
+      # This entry is zero in exact arithmetic. Assigning zero explicitly
+      # prevents harmless floating-point remnants from obscuring the structure.
+      L[i, j] <- 0
+    }
+  }
+
+  list(L = L, ytilde = ytilde)
+}
+
+.make_upper_trapezoidal <- function(L, ytilde) {
+  r <- nrow(L)
+
+  if (r <= 1L) {
+    return(list(L = L, ytilde = ytilde))
+  }
+
+  # An upper triangular leftmost r x r block is stronger than the required
+  # upper-trapezoidal condition with bandwidth d-r and therefore satisfies it.
+  # Again, only orthogonal Givens row rotations are used.
+  for (j in seq_len(r - 1L)) {
+    pivot <- j
+
+    for (i in seq.int(r, j + 1L, by = -1L)) {
+      x <- L[pivot, j]
+      y <- L[i, j]
+
+      if (y == 0) {
+        next
+      }
+
+      rho <- .safe_hypot(x, y)
+      cc <- x / rho
+      ss <- y / rho
+
+      row_pivot <- L[pivot, ]
+      row_i <- L[i, ]
+
+      L[pivot, ] <- cc * row_pivot + ss * row_i
+      L[i, ] <- -ss * row_pivot + cc * row_i
+
+      y_pivot <- ytilde[pivot]
+      y_i <- ytilde[i]
+      ytilde[pivot] <- cc * y_pivot + ss * y_i
+      ytilde[i] <- -ss * y_pivot + cc * y_i
+
+      L[i, j] <- 0
+    }
+  }
+
+  list(L = L, ytilde = ytilde)
+}
 
 #' Companion Hypothesis Matrix Transformation
 #'
-#' This function transforms the given hypothesis into a companion hypothesis.
-#' It checks whether the original matrix `H` has full row rank. If the matrix
-#' does not have full row rank, the function will proceed to generate a
-#' companion matrix. If the option `utrapez` is enabled, the function attempts
-#'  — where numerically feasible — to produce a companion matrix with upper
-#' trapezoidal structure. If a vector `y` is provided, a
-#' transformed vector `ytilde` is calculated as well and returned together with
-#' the companion matrix.
+#' Constructs a companion representation of a linear hypothesis `H %*% theta = y`
+#' with the minimal number of rows. The numerical rank is determined by
+#' `qr(H)$rank`. The companion is computed from a singular value decomposition
+#' of `H` directly, avoiding the numerically less favorable formation and
+#' decomposition of `t(H) %*% H`.
 #'
-#' @param H A numeric matrix representing the hypothesis. It should be of size
-#' `m x n`, where `m` is the number of rows.
-#' @param y An optional numeric vector, which only has to be specified if it is
-#' not a zero vector. It will be transformed alongside the matrix.
-#' @param utrapez A binary option which specifies the function should attempt
-#' to compute a companion matrix with upper trapezoidal structure.The default
-#' is `1` (TRUE). Disabling this option may improve computational efficiency.
+#' @param H A numeric hypothesis matrix of size `m x d`.
+#' @param y An optional numeric vector of length `m`. If omitted, the zero
+#'   vector is used. The solution set `H %*% theta = y` must be non-empty.
+#' @param utrapez Legacy logical/binary option kept for backward compatibility.
+#'   If `trapez` is `NULL`, `TRUE` (or `1`) requests an upper-trapezoidal
+#'   companion and `FALSE` (or `0`) requests no trapezoidal transformation.
+#'   New code should use `trapez` instead.
+#' @param trapez Optional character string specifying the structure of the
+#'   companion matrix: `"lower"`, `"upper"`, or `"none"`. If specified, this
+#'   argument takes precedence over `utrapez`.
 #'
 #' @return A list with two components:
 #' \itemize{
-#'   \item L: The transformed matrix (companion matrix).
-#'   \item ytilde: The transformed vector.
+#'   \item `L`: A numeric matrix with `rank(H)` rows satisfying
+#'     `t(L) %*% L = t(H) %*% H` up to floating-point accuracy.
+#'   \item `ytilde`: A numeric vector of length `rank(H)` satisfying the
+#'     corresponding companion conditions.
 #' }
 #'
 #' @details
-#' If the  matrix `H` has full row rank, an error message will be shown,
-#' indicating that the matrix should only be used if the original matrix has
-#' not full row rank.
+#' Let `r = rank(H)` and consider the compact singular value decomposition
+#' `H = U_r D_r V_r^T`. The initial companion is `L = D_r V_r^T`, for which
+#' `t(L) %*% L = t(H) %*% H`. For a non-empty hypothesis,
+#' `ytilde = t(U_r) %*% y` additionally satisfies
+#' `t(L) %*% ytilde = t(H) %*% y` and preserves the Euclidean norm of the
+#' right-hand side.
 #'
-#' If the matrix `H` has no full row rank, the compact matrix square root of
-#' `t(H)%*% H` is computed. The vector `y` is then transformed accordingly,
-#' and the scale factor is computed to ensure the norm of the vector remains
-#'  unchanged after the transformation.
+#' If a trapezoidal form is requested, orthogonal Givens row rotations are
+#' applied simultaneously to `L` and `ytilde`. Hence all companion conditions
+#' remain unchanged. For a lower-trapezoidal companion, the bandwidth is
+#' `d-r`, meaning `L[i, j] = 0` whenever `j-i > d-r`. The upper form is defined
+#' analogously by `L[i, j] = 0` whenever `i-j > d-r`.
 #'
 #' @examples
-#' # Example 1: Matrix with full row rank
-#' H <- matrix(c(1, 2, 3, 4), nrow = 2)
-#' CompanionHypothesis(H)
+#' # Rank-deficient centered hypothesis
+#' H <- diag(4) - matrix(1 / 4, 4, 4)
+#' comp <- CompanionHypothesis(H, trapez = "lower")
+#' nrow(comp$L) == qr(H)$rank
+#' all.equal(crossprod(comp$L), crossprod(H))
 #'
-#' # Example 2: Matrix with not full row rank and vector y
-#' H <- matrix(c(1, 2, 1, 2), nrow = 2)
-#' y <- c(5, 6)
-#' CompanionHypothesis(H, y)
+#' # Non-zero right-hand side with a non-empty solution set
+#' H <- rbind(c(1, 0, -1), c(2, 0, -2))
+#' y <- c(1, 2)
+#' comp <- CompanionHypothesis(H, y, trapez = "upper")
+#' all.equal(crossprod(comp$L, comp$ytilde), crossprod(H, y))
 #'
 #' @export
-CompanionHypothesis <- function(H, y=NULL,utrapez=1) {
-  if (is.null(y)){y = rep(0, dim(H)[1])}
-  HypoCheck(H,y)
+CompanionHypothesis <- function(H, y = NULL, utrapez = TRUE, trapez = NULL) {
+  if (is.null(y)) {
+    y <- rep(0, nrow(H))
+  }
 
-  if((qr(H)$rank)==dim(H)[1])
-  {cat( "\033[31m Matrix should only be used if the original matrix has not full
-        row rank. \n\n\033[0m")
- # If the matrix has full row rank, return the original matrix and vector
-    L = H
-    ytilde=y
-  } else {
-    # Compute the compact matrix square root of t(H)%*% H, depending on the
-    # parameter as upper trapezoidal matrix
-    if(utrapez==0){ Laux <- MSrootcompact(t(H) %*% H)}
-    if(utrapez==1){ Laux <- modified_cholesky(t(H) %*% H)
-    if(max(is.na(Laux))){Laux <- MSrootcompact(t(H) %*% H)}}
+  HypoCheck(H, y)
 
-    # If y is not NULL or a zero vector, also transform the vector
-    if ( all(y == 0)) {
-      L = Laux
-      ytilde = y
-    } else {
-      # Solve t(L) %*% ytilde = t(H) %*% y for ytilde
-      ytilde <- qr.solve(t(Laux), t(H) %*% y)
+  qr_H <- qr(H)
+  r <- qr_H$rank
 
-      # Scale L such that ||y|| = ||L %*% ytilde||
-      scale_factor <- sqrt(sum(y^2)) / sqrt(sum(ytilde^2))
-      L <- scale_factor * Laux
+  # The companion construction for non-zero y requires a non-empty solution
+  # set. Using the same QR-based rank concept keeps this check consistent with
+  # the numerical rank used for the row reduction.
+  if (qr(cbind(H, y))$rank > r) {
+    stop("The hypothesis H %*% theta = y has an empty solution set.")
+  }
+
+  if (is.null(trapez)) {
+    if (length(utrapez) != 1L || is.na(utrapez) ||
+        !(utrapez %in% c(FALSE, TRUE, 0, 1))) {
+      stop("'utrapez' must be TRUE/FALSE or 0/1.")
     }
 
-    # Return the transformed matrix L and transformed vector ytilde
-    d1=dim(H)[1]
-    d2=dim(L)[1]
-    cat(paste("\033[32m By using the companion matrix, the number of rows can be reduced
-  from ", d1," to ", d2,". \n\n\033[0m",sep=""))}
-  return(list("L" = L, "ytilde" = ytilde))
+    trapez <- if (isTRUE(as.logical(utrapez))) "upper" else "none"
+  } else {
+    if (!is.character(trapez) || length(trapez) != 1L || is.na(trapez)) {
+      stop("'trapez' must be one of 'lower', 'upper', or 'none'.")
+    }
+
+    trapez <- match.arg(tolower(trapez), c("lower", "upper", "none"))
+  }
+
+  companion <- .compact_companion(H, y, r)
+
+  if (trapez == "lower") {
+    companion <- .make_lower_trapezoidal(companion$L, companion$ytilde)
+  } else if (trapez == "upper") {
+    companion <- .make_upper_trapezoidal(companion$L, companion$ytilde)
+  }
+
+  companion
 }

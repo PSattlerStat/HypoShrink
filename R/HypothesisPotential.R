@@ -67,8 +67,8 @@ ATS_s <- function(X, H, Sigma = NULL) {
 #'
 #' This function computes the adjusted ATS (ATS_f) value for a given hypothesis
 #' matrix `H` and a vector `X`, optionally using a covariance matrix `Sigma`.
-#' The ATS_f statistic adjusts the ATS by a factor involving
-#' the matrix `H%*%Sigma%*%t(H)`.
+#' With `M = H %*% Sigma %*% t(H)`, the adjusted statistic is
+#' `ATS * tr(M) / tr(M^2)`, equivalently `ATS_s * tr(M)^2 / tr(M^2)`.
 #'
 #' @param X A numeric vector representing the data vector.
 #' @param H A numeric matrix representing the hypothesis matrix.
@@ -97,8 +97,11 @@ ATS_f <- function(X, H, Sigma = NULL) {
   # Compute the ATS statistic
   ATS = sum(Vector^2)
 
-  # Compute the adjusted ATS_f statistic
-  ATS_f = ATS * sum(diag(Matrix %*% Matrix)) / (sum(diag(Matrix))^2)
+  # Compute the adjusted ATS_f statistic as
+  # ATS_s * tr(Matrix)^2 / tr(Matrix^2).
+  trace_M <- sum(diag(Matrix))
+  trace_M2 <- sum(diag(Matrix %*% Matrix))
+  ATS_f <- ATS * trace_M / trace_M2
 
   return(ATS_f)
 }
@@ -148,9 +151,8 @@ WTS <- function(X, H, Sigma = NULL) {
 #' matrix instead of the original hypothesis matrix `H`.
 #'
 #' @param H A hypothesis matrix. Must **not** have full row rank.
-#' @param duration Minimum time (in seconds) that each benchmark comparison
-#'        should run, with defaults setting are 10 seconds. which should not be
-#'        undercut, and  even set higher for more reliable results.
+#' @param duration Minimum benchmark time in seconds for each comparison.
+#'   Must be a positive numeric scalar; the default is 10 seconds.
 #'
 #' @return A data frame containing the relative time savings (in percent) for
 #' each method.
@@ -162,46 +164,57 @@ WTS <- function(X, H, Sigma = NULL) {
 #' @export
 #'
 #' @examples
-#' # Example usage (requires functions like ATS, ATS_s, etc., to be defined):
-#' # H <- matrix(c(1, 0, 1, 1), nrow = 2)
-#' # HypothesisPotential(H, duration = 5)
+#' H <- diag(4) - matrix(1 / 4, 4, 4)
+#' \dontrun{
+#' HypothesisPotential(H, duration = 1)
+#' }
 HypothesisPotential <- function(H, duration = 10) {
-  # Generate companion hypothesis matrix L from H
-  L <- CompanionHypothesis(H)$L
-
-  # Simulate a random vector X with appropriate number of columns
-  X <- matrix(stats::runif(ncol(H)))
-
-  # Ensure that the original matrix H does NOT have full row rank
-  if (qr(H)$rank == nrow(H)) {
-    stop("Companion matrix should only be used if the original matrix does not
-         have full row rank.\n")
+  if (!is.matrix(H) || !is.numeric(H) || any(!is.finite(H))) {
+    stop("'H' must be a numeric matrix containing only finite values.")
   }
 
-  # Benchmark each method with H and its companion matrix L
-  # Settings: no memory check, run for at least `duration` seconds, and cap at
-  # 10M iterations
-  ATSbench   <- bench::mark(ATS(X, H), ATS(X, L), check = FALSE,
-                            memory = FALSE, min_time = duration,
-                            max_iterations = 10000000)
-  ATS_sbench <- bench::mark(ATS_s(X, H), ATS_s(X, L), check = FALSE,
-                            memory = FALSE, min_time = duration,
-                            max_iterations = 10000000)
-  ATS_fbench <- bench::mark(ATS_f(X, H), ATS_f(X, L), check = FALSE,
-                            memory = FALSE, min_time = duration,
-                            max_iterations = 10000000)
-  WTSbench   <- bench::mark(WTS(X, H), WTS(X, L), check = FALSE, memory = FALSE,
-                            min_time = duration, max_iterations = 10000000)
+  if (!is.numeric(duration) || length(duration) != 1L ||
+      !is.finite(duration) || duration <= 0) {
+    stop("'duration' must be a single positive numeric value.")
+  }
 
-  # Helper function to compute relative time saved (%)
-  relative_saving <- function(bench) {
-    time_H <- as.numeric(bench$total_time[1])
-    time_L <- as.numeric(bench$total_time[2])
+  if (qr(H)$rank == nrow(H)) {
+    stop("A companion matrix cannot reduce the number of rows because 'H' has full row rank.")
+  }
+
+  # No trapezoidal structure is needed for the benchmark.
+  L <- CompanionHypothesis(H, utrapez = FALSE)$L
+
+  X <- matrix(stats::runif(ncol(H)))
+
+  ATSbench <- bench::mark(
+    ATS(X, H), ATS(X, L),
+    check = FALSE, memory = FALSE, min_time = duration,
+    max_iterations = 10000000
+  )
+  ATS_sbench <- bench::mark(
+    ATS_s(X, H), ATS_s(X, L),
+    check = FALSE, memory = FALSE, min_time = duration,
+    max_iterations = 10000000
+  )
+  ATS_fbench <- bench::mark(
+    ATS_f(X, H), ATS_f(X, L),
+    check = FALSE, memory = FALSE, min_time = duration,
+    max_iterations = 10000000
+  )
+  WTSbench <- bench::mark(
+    WTS(X, H), WTS(X, L),
+    check = FALSE, memory = FALSE, min_time = duration,
+    max_iterations = 10000000
+  )
+
+  relative_saving <- function(benchmark) {
+    time_H <- as.numeric(benchmark$total_time[1])
+    time_L <- as.numeric(benchmark$total_time[2])
     round(100 * (1 - time_L / time_H), 1)
   }
 
-  # Compile results in a readable data frame
-  df=data.frame(
+  data.frame(
     Method = c("ATS", "ATS_s", "ATS_f", "WTS"),
     Relative_Time_Saved = paste0(
       c(
@@ -214,4 +227,4 @@ HypothesisPotential <- function(H, duration = 10) {
     ),
     row.names = NULL
   )
-return(df)}
+}
