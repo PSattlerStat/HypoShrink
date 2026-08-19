@@ -1,3 +1,5 @@
+meta <- packageDescription("HypoShrink")
+
 citHeader("To cite the HypoShrink package in publications use:")
 
 bibentry(
@@ -8,7 +10,7 @@ bibentry(
     person("Manuel", "Rosenbaum")
   ),
   year = "2025",
-  note = "R package version 1.0.0",
+  note = paste("R package version", meta$Version),
   doi = "10.5281/zenodo.17214498",
   url = "https://github.com/PSattlerStat/HypoShrink"
 )
